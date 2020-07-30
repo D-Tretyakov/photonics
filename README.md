@@ -1,2 +1,2 @@
 # photonics
-chat bot for study things management
+chat bot for study-things management
