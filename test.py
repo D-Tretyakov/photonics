@@ -24,6 +24,3 @@ def main():
                 vk.messages.send(user_id=usr_id, message='Ты пидор', random_id=0)
 
             vk.messages.send(user_id=usr_id, message=text.upper(), random_id=0)
-
-if __name__ == '__main__':
-    main()
