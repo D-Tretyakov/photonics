@@ -11,6 +11,7 @@ def main():
     vk = vk_session.get_api()
 
     # тимур пидорас
+    # просто пиздец какой
     longpoll = VkBotLongPoll(vk_session, '175910367')
 
     for event in longpoll.listen():
