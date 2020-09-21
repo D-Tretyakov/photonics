@@ -10,6 +10,7 @@ def main():
     vk_session = vk_api.VkApi(token='a9348fbc4a04e6ba9e6082f09bfbf310d8e67e220601a374dff5d3faff58db8b8cecf6d59b0c6c8acab40')
     vk = vk_session.get_api()
 
+    # тимур пидорас
     longpoll = VkBotLongPoll(vk_session, '175910367')
 
     for event in longpoll.listen():
