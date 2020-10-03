@@ -22,7 +22,7 @@ def main():
             # page = vk.users.get(user_id=116584678)
 
             if user_id == 116584678 and random.random() > 0.3:
-                vk.messages.send(user_id=user_id, message='Ты пидор', random_id=0)
+                vk.messages.send(user_id=user_id, message='Хорват пидор', random_id=0)
 
             vk.messages.send(user_id=user_id, message=text.upper(), random_id=0)
 
