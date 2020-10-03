@@ -2,6 +2,9 @@ import vk_api
 from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
 import random
 
+from database import DB
+db = DB()
+
 def main():
     """ Пример использования bots longpoll
         https://vk.com/dev/bots_longpoll
@@ -10,7 +13,6 @@ def main():
     vk_session = vk_api.VkApi(token='a9348fbc4a04e6ba9e6082f09bfbf310d8e67e220601a374dff5d3faff58db8b8cecf6d59b0c6c8acab40')
     vk = vk_session.get_api()
 
-    # тимур пидорас
     longpoll = VkBotLongPoll(vk_session, '175910367')
 
     for event in longpoll.listen():
@@ -25,6 +27,17 @@ def main():
                 vk.messages.send(user_id=user_id, message='Ты пидор', random_id=0)
 
             vk.messages.send(user_id=user_id, message=text.upper(), random_id=0)
+
+            res = parse_msg(text)
+            cmd = res['command']
+            if cmd == 'добавить':
+                db.add_task('subj1', date1, date2, files)
+                answer('')
+            elif cmd == 'удалить':
+                db.delete()
+            elif cmd == None:
+                answer('хз')
+            
 
 if __name__ == "__main__":
     main()
