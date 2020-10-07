@@ -28,15 +28,10 @@ def main():
 
             vk.messages.send(user_id=user_id, message=text.upper(), random_id=0)
 
-            res = parse_msg(text)
-            cmd = res['command']
-            if cmd == 'добавить':
-                db.add_task('subj1', date1, date2, files)
-                answer('')
-            elif cmd == 'удалить':
-                db.delete()
-            elif cmd == None:
-                answer('хз')
+            parsed_msg = parse_msg(text)
+            
+            status = handling_command(parsed_msg)
+            
             
 
 if __name__ == "__main__":
