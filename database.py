@@ -6,29 +6,36 @@ def format_func (inquiry, type_of_inquiry, parameters):
 
     if type_of_inquiry == 'добавить':
         if inquiry == "homework":
-            return "INSERT INTO {} VALUES(?, ?, ?, ?, ?)".format(inquiry)
-        else:#Задел на библиотеку и лекционку
-            pass    
+            return "INSERT INTO {} VALUES(?, ?, ?, ?, ?)".format(inquiry) 
+        #if здесь, потому что потом будут и для inquiry == "library" и "lectures"  *****
     elif type_of_inquiry == 'удалить':
-        if inquiry == 'homework'
-            marker = 'to_date'
-            return "DELETE FROM {} WHERE {} = ?".format(inquiry, marker ) 
-        else:
-            pass
+        if inquiry == 'homework':
+            return "DELETE FROM homework WHERE subj = ? AND from_date = ?" 
+        #аналогично *****
     elif type_of_inquiry == 'показать':
         if inquiry == 'homework':
             if parameters['subj'] is not None:   
-                return "SELECT * FROM {} WHERE {} = ? ORDER BY from_date DESC LIMIT ?".format(inquiry, 'subj')
-            elif parameters["date"] is not None:
-                return  "SELECT * FROM {} WHERE {} = ? ORDER BY from_date DESC LIMIT ?".format(inquiry, 'to_date')
-            else:
-                return 'Мало данных'
-        else:
-            pass 
-    else:
-        print("Unknown ERROR in format_func")
+                return "SELECT * FROM {} WHERE {} = ? ORDER BY to_date DESC LIMIT ?".format(inquiry, 'subj')
+            elif parameters["to_date"] is not None:
+                return  "SELECT * FROM {} WHERE {} = ? ".format(inquiry, 'to_date')
+        #аналогично *****
 
 
+def sql_insert(database, parameters):
+
+    sql = database.cursor()
+
+    inquiry = parameters['type']
+    type_of_inquiry = parameters['command']
+    if inquiry == "homework":#Пока делаю исключительно для домашки
+        added_marker = (parameters['subj'], date_reverse(parameters['from_date']), date_reverse(parameters['to_date']),
+                        parameters['task'], parameters['file'])
+    
+    sql.execute(format_func(inquiry, type_of_inquiry, parameters), added_marker)
+    database.commit()
+    sql.close()
+
+    return None
 
 def sql_delete (database, parameters):
 
@@ -36,12 +43,13 @@ def sql_delete (database, parameters):
 
     inquiry = parameters['type']
     type_of_inquiry = parameters['command']
-    if inquiry == "homework":#Пока делаю исключительно для домашки
-        removable_marker == parameters['date']
-    else:
-        pass
 
-    sql.execute(format_func(inquiry, type_of_inquiry, parameters), (removable_marker))
+    if inquiry == "homework":
+        #Пока делаю исключительно для домашки
+        removable_marker1 = parameters['subj']
+        removable_marker2 = parameters['from_date']
+    # #аналогично *****
+    sql.execute(format_func(inquiry, type_of_inquiry, parameters), (removable_marker1, date_reverse(removable_marker2)))
     database.commit()
     sql.close()
 
@@ -53,51 +61,37 @@ def sql_show(database, parameters):
 
     inquiry = parameters['type']
     type_of_inquiry = parameters['command']
-
     if inquiry == 'homework':
-                #Если  пользователь  хочет домашку по предмету и не говорит, сколько, то автоматом выдаёт 5 последних
-        if  parameters['subj'] is not None  
+        print(parameters)
+        #Если  пользователь  хочет домашку по предмету и не говорит, сколько, то автоматом выдаёт 5 последних
+        if  parameters['subj'] is not None: 
             sql.execute(format_func(inquiry, type_of_inquiry, parameters),
-                    (subj, parameters["amount"] if parameters["amount"] is not None else 5))
+                        (parameters['subj'], parameters["amount"] if parameters["amount"] is not None else 5))
             hw = sql.fetchall()
-        elif parameters['date'] is not None:# Если похуй на предмет, а дал конкретную дату, то выдаст всю на эту дату 
-            sql.execute(format_func(inquiry, type_of_inquiry, parameters), (parameters['date']))
+        elif parameters['to_date'] is not None:# Если похуй на предмет, а дал конкретную дату, то выдаст всю на эту дату 
+            sql.execute(format_func(inquiry, type_of_inquiry, parameters), (date_reverse(parameters['to_date']),))
             hw = sql.fetchall()
-        else:
-            hw = "Не хватает данных "
-
+        #аналогично *****
         database.commit()
         sql.close()    
-        return hw 
+        return hw
 
-    else:
-        pass
+#Нужна, чтобы реверсить дату, например 281020 -> 201028. Для чего нужно ? 
+#В базе хранится именно так и связано с сортировкой SQL
+# А так мне стыдно за это говно 
+def date_reverse(number):
+    number = number[::-1]
+    new_number = str()
+    for i  in range (len(number)):
+        if i % 2 != 0:
+            new_number = new_number + number[i] + number[i-1]
+    return new_number
 
-
-
-    
-def sql_insert(database, parameters):
-
-    sql = database.cursor()
-
-    inquiry = parameters['type']
-    type_of_inquiry['command']
-    if inquiry == "homework":#Пока делаю исключительно для домашки
-        added_marker == (parameters['subj'], parameters['from_date'], parameters['to_date'],
-                        parameters['task'], parameters['file'])
-    else:
-        pass
-    sql.execute(format_func(inquiry, type_of_inquiry, parameters), added_marker)
-    database.commit()
-    sql.close()
-
-    return None 
 
 def check_ERROR(parameters):
-    if 'error' not in  parameters.keys()
-         return True
-    else 
-        print("Всё хуйня Миша, давай по-новой")
+    if 'error' not in  parameters.keys():
+        return True
+    else: 
         return False
 
 
@@ -107,13 +101,44 @@ def handling_command(parameters):
     response = {}
     if check_ERROR(parameters):
         # Возвращаемый мной словарь будет включать 3 ключа
-        # Пишу так, просто чтоб подчеркнуть это, польше ничего там не будет 
+        # Пишу так, просто чтоб подчеркнуть это, больше ничего там не будет 
+        db = sqlite3.connect('db1.sqlite3')
+        sql = db.cursor()
+        sql.execute("""CREATE TABLE IF NOT EXISTS homework(
+            subj TEXT,
+            from_date TEXT,
+            to_date TEXT,
+            task TEXT,
+            file TEXT
+        )""")
+
+
+        sql.execute("""CREATE TABLE IF NOT EXISTS library(
+            subj TEXT,
+            typeofbook TEXT,
+            semestr TEXT,
+            author TEXT,
+            file TEXT
+        )""")
+
+        sql.execute("""CREATE TABLE IF NOT EXISTS lection(
+            subj TEXT,
+            semestr TEXT
+            num INTEGER
+            file TEXT,
+            author TEXT
+        )""")
+
+        db.commit()
+
         response['type'] = None 
         response['answ'] = None
         response['command'] = None
     
-        db = sqlite3.connect('db.sqlite3')
-        sql = db.cursor()
+        
+
+        #for i in sql.execute("SELECT * FROM homework"):
+        #   print(i)  
 
         command = parameters['command']
         response['command'] = parameters['command']
@@ -121,10 +146,11 @@ def handling_command(parameters):
         if command == 'добавить':
             #Вообще, под дз нормальный словарь, который хорват написал, но для лекция и учебников понадобится другой
             #Но сейчас все равно мне нужен ещё  type: homework 
-            sql_insert(db, parameters)
-            response['type'] = "homework"
-            response['answ'] = "Файл добавлен"
-             
+            if parameters['type'] == 'homework':
+                sql_insert(db, parameters)
+                response['type'] = "homework"
+                response['answ'] = "Файл добавлен"
+            #аналогично *****
         elif command == 'удалить': 
             if parameters['type'] == 'homework':
                 #Если команда "удалить", говоря о дз, например, то нужен словарь вида:
@@ -132,14 +158,20 @@ def handling_command(parameters):
                 sql_delete (db, parameters)
                 response['type'] = "homework"
                 response['answ'] = "Файл удален"
-            else:
-                pass
+            #аналогично *****
             
         elif command == 'показать':
             #Показать что ? В словаре, который приходит ко мне должен быть еще один ключ, type:homework или type:library или type:lection  
             hw = sql_show(db, parameters)
             response['type'] = "homework"
-            response['answ'] = hw
+            hw2 = list()
+            for old_elements in hw:
+                new_elements = list(old_elements)
+                new_elements[1] = date_reverse(old_elements[1]) 
+                new_elements[2] = date_reverse(old_elements[2])
+                hw2.append(new_elements)
+            response['answ'] = hw2
+    
             
             # elif parameters['type'] == 'library':#В словаре для библиотеки, который приходит ко мне, должен быть ключ typeofbook:учебник или лабник или задачник или всё#
             #             sql.execute("SELECT * FROM library ")
@@ -165,50 +197,33 @@ def handling_command(parameters):
             #     response['answ'] = lect
 
 
-        #Хуйню с исключениями в запросах к базе пока не рассматривал 
+        
         else:
-        return "Unknown ERROR" 
+            db.commit()
+            sql.close()
+            response['error'] = 'Не нашел команду'
+            return  response
+        
+        #for i in sql.execute("SELECT * FROM homework"):
+        #    print(i)  
+        db.commit()
+        sql.close()   
+
+        return response
                 
     else:
-        return parameters 
+        response['error'] = 'Сработал Сheck Error'
+        return response 
         
                     
-    
 
+        
+# Потестил, все работает
 
-
-
-
-
-db = sqlite3.connect('db.sqlite3')
-sql = db.cursor()
-sql.execute("""CREATE TABLE IF NOT EXISTS homework(
-    subj TEXT,
-    from_date TEXT,
-    to_date TEXT,
-    task TEXT,
-    file TEXT,
-)""")
-
-
-sql.execute("""CREATE TABLE IF NOT EXISTS library(
-    subj TEXT,
-    typeofbook TEXT,
-    semestr TEXT,
-    author TEXT,
-    file TEXT,
-)""")
-
-sql.execute("""CREATE TABLE IF NOT EXISTS lection(
-    subj TEXT,
-    semestr TEXT
-    num INTEGER
-    file TEXT,
-    author TEXT,
-)""")
-
-db.commit()
-
-    
-
-
+par2 = {'subj': 'Тополя', 'type':'homework', 'from_date':'310220', 'command':'удалить'}   
+par1 = {'type':'homework', 'command':'добавить', 'subj':'Урматы', 'from_date':'230220', 'to_date':'071220', 'task':'нихуя', 'file':None}  
+par3 = {'type':"homework", 'command':'показать', 'subj': "Атомка", 'to_date': None, 'amount':2  }
+par4 = {'type':"homework", 'command':'показать', 'subj': None, 'to_date': '071220', 'amount':None }   
+par5 = {'error': "Хуйня какая-то"}
+a = handling_command(par4)
+print(a)
