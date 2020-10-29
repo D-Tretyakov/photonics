@@ -98,10 +98,7 @@ def parsing(str1 ,id , name):
 
     return dictfull
 
-s = str(input())
-id = '3435454'
-name = 'fool'
-print(parsing(s, id, name))
+
 
 
 
