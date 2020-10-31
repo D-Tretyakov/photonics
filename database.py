@@ -1,5 +1,5 @@
 import sqlite3
-
+import datetime as dt
 
 
 def format_func (inquiry, type_of_inquiry, parameters):
@@ -28,7 +28,7 @@ def sql_insert(database, parameters):
     inquiry = parameters['type']
     type_of_inquiry = parameters['command']
     if inquiry == "homework":#Пока делаю исключительно для домашки
-        added_marker = (parameters['subj'], date_reverse(parameters['from_date']), date_reverse(parameters['to_date']),
+        added_marker = (parameters['subj'], parameters['from_date'].date().strftime("%Y-%m-%d"), parameters['to_date'].date().strftime("%Y-%m-%d"),
                         parameters['task'], parameters['file'])
     
     sql.execute(format_func(inquiry, type_of_inquiry, parameters), added_marker)
@@ -49,7 +49,8 @@ def sql_delete (database, parameters):
         removable_marker1 = parameters['subj']
         removable_marker2 = parameters['from_date']
     # #аналогично *****
-    sql.execute(format_func(inquiry, type_of_inquiry, parameters), (removable_marker1, date_reverse(removable_marker2)))
+    print(parameters)
+    sql.execute(format_func(inquiry, type_of_inquiry, parameters), (removable_marker1, parameters['from_date'].date().strftime("%Y-%m-%d")))
     database.commit()
     sql.close()
 
@@ -69,7 +70,7 @@ def sql_show(database, parameters):
                         (parameters['subj'], parameters["amount"] if parameters["amount"] is not None else 5))
             hw = sql.fetchall()
         elif parameters['to_date'] is not None:# Если похуй на предмет, а дал конкретную дату, то выдаст всю на эту дату 
-            sql.execute(format_func(inquiry, type_of_inquiry, parameters), (date_reverse(parameters['to_date']),))
+            sql.execute(format_func(inquiry, type_of_inquiry, parameters), (parameters['to_date'].date().strftime("%Y-%m-%d"),))
             hw = sql.fetchall()
         #аналогично *****
         database.commit()
@@ -79,13 +80,24 @@ def sql_show(database, parameters):
 #Нужна, чтобы реверсить дату, например 281020 -> 201028. Для чего нужно ? 
 #В базе хранится именно так и связано с сортировкой SQL
 # А так мне стыдно за это говно 
-def date_reverse(number):
-    number = number[::-1]
-    new_number = str()
-    for i  in range (len(number)):
-        if i % 2 != 0:
-            new_number = new_number + number[i] + number[i-1]
-    return new_number
+def date_func(parameters):
+    if type(parameters) == dict:    
+        for key in parameters.keys():
+            if key == 'to_date':
+                parameters['to_date'] = dt.datetime.strptime(parameters['to_date'], "%d%m%Y") 
+            if key == 'from_date':
+                parameters['from_date'] = dt.datetime.strptime(parameters['from_date'], "%d%m%Y")
+        return parameters 
+    else: 
+        #Используется лишь в редактировании при показе домашки 
+        hw = list()
+        for old_elements in parameters:
+            new_elements = list(old_elements)
+            new_elements[1] = dt.datetime.strptime(old_elements[1], "%Y-%m-%d")
+            new_elements[2] = dt.datetime.strptime(old_elements[2], "%Y-%m-%d")
+            hw.append(new_elements) 
+        return hw
+
 
 
 def check_ERROR(parameters):
@@ -137,12 +149,13 @@ def handling_command(parameters):
     
         
 
-        #for i in sql.execute("SELECT * FROM homework"):
-        #   print(i)  
+        for i in sql.execute("SELECT * FROM homework"):
+           print(i)  
 
         command = parameters['command']
         response['command'] = parameters['command']
-        
+        parameters = date_func(parameters)
+
         if command == 'добавить':
             #Вообще, под дз нормальный словарь, который хорват написал, но для лекция и учебников понадобится другой
             #Но сейчас все равно мне нужен ещё  type: homework 
@@ -164,48 +177,17 @@ def handling_command(parameters):
             #Показать что ? В словаре, который приходит ко мне должен быть еще один ключ, type:homework или type:library или type:lection  
             hw = sql_show(db, parameters)
             response['type'] = "homework"
-            hw2 = list()
-            for old_elements in hw:
-                new_elements = list(old_elements)
-                new_elements[1] = date_reverse(old_elements[1]) 
-                new_elements[2] = date_reverse(old_elements[2])
-                hw2.append(new_elements)
-            response['answ'] = hw2
-    
-            
-            # elif parameters['type'] == 'library':#В словаре для библиотеки, который приходит ко мне, должен быть ключ typeofbook:учебник или лабник или задачник или всё#
-            #             sql.execute("SELECT * FROM library ")
-            #             lib = sql.fetchall()
-            #             response['type'] = "library"
-            #             response['answ'] = lib
-
-            # elif parameters['type'] == "lection":# Для лекций на показ в словаре  должен быть ключ  typelection: True или False, который даст мне понимание того, нужно ли выводить всё
-            #     if parameters['typelection']:
-            #         sql.execute("SELECT * FROM lection ")
-            #         lect = sql.fetchall()
-            #     elif parameters['typelection'] is not True:#Здесь если нужно вывести только определенные лекции с номером или по просто определенному предмету 
-            #             if parameters['num'] is None:#ВАЖНО! пользователь в этом случае обязательно должен ввести как минимум семестр и предмет
-            #                 sql.execute("SELECT * FROM lection WHERE subj = ? and  semestr = ?", (parameters['subj'], parameters['semestr']))  
-            #                 lect = sql.fetchall()
-            #             elif parameters['num'] is  not None:
-            #                 sql.execute("SELECT * FROM lection WHERE subj = ? and  semestr = ? and num = ?", (parameters['subj'], parameters['semestr'],  parameters['num']))  
-            #                 lect = sql.fetchall()
-            #     else:
-            #         print("Хуйня какая-то")
-
-            #     response['type'] = "lecture"
-            #     response['answ'] = lect
-
-
+            hw = date_func(hw)
+            response['answ'] = hw
         
         else:
             db.commit()
             sql.close()
             response['error'] = 'Не нашел команду'
             return  response
-        
-        #for i in sql.execute("SELECT * FROM homework"):
-        #    print(i)  
+        print('---------------------------------------------------------------------------------------------')
+        for i in sql.execute("SELECT * FROM homework"):
+            print(i)  
         db.commit()
         sql.close()   
 
@@ -220,10 +202,10 @@ def handling_command(parameters):
         
 # Потестил, все работает
 
-par2 = {'subj': 'Тополя', 'type':'homework', 'from_date':'310220', 'command':'удалить'}   
-par1 = {'type':'homework', 'command':'добавить', 'subj':'Урматы', 'from_date':'230220', 'to_date':'071220', 'task':'нихуя', 'file':None}  
+par2 = {'subj': 'Тополя', 'type':'homework', 'from_date':'31022020', 'command':'удалить'}   
+par1 = {'type':'homework', 'command':'добавить', 'subj':'Кванты', 'from_date':'23022020', 'to_date':'07122020', 'task':'нихуя', 'file':None}  
 par3 = {'type':"homework", 'command':'показать', 'subj': "Атомка", 'to_date': None, 'amount':2  }
-par4 = {'type':"homework", 'command':'показать', 'subj': None, 'to_date': '071220', 'amount':None }   
+par4 = {'type':"homework", 'command':'показать', 'subj': None, 'to_date': '07122020', 'amount':None }   
 par5 = {'error': "Хуйня какая-то"}
 a = handling_command(par4)
 print(a)
