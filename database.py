@@ -77,9 +77,7 @@ def sql_show(database, parameters):
         sql.close()    
         return hw
 
-#Нужна, чтобы реверсить дату, например 281020 -> 201028. Для чего нужно ? 
-#В базе хранится именно так и связано с сортировкой SQL
-# А так мне стыдно за это говно 
+
 def date_func(parameters):
     if type(parameters) == dict:    
         for key in parameters.keys():
@@ -148,9 +146,9 @@ def handling_command(parameters):
         response['command'] = None
     
         
-
-        for i in sql.execute("SELECT * FROM homework"):
-           print(i)  
+        #Эту вещь удалять не буду, потому что в нужном месте в случае доработок выводит таблицу
+        # for i in sql.execute("SELECT * FROM homework"):
+        #    print(i)  
 
         command = parameters['command']
         response['command'] = parameters['command']
@@ -185,9 +183,9 @@ def handling_command(parameters):
             sql.close()
             response['error'] = 'Не нашел команду'
             return  response
-        print('---------------------------------------------------------------------------------------------')
-        for i in sql.execute("SELECT * FROM homework"):
-            print(i)  
+        #Эту вещь удалять не буду, потому что в нужном месте в случае доработок выводит таблицу
+        # for i in sql.execute("SELECT * FROM homework"):
+        #     print(i)  
         db.commit()
         sql.close()   
 
