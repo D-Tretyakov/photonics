@@ -79,7 +79,7 @@ def main():
                 # tasks = db.get(subj_name)
                 # answ = deins_func(tasks)
                 # answer(answ)
-                tasks = show_task(result['subj'], result['amount'])
+                tasks = show_task(result['subj'], int(result['amount']))
                 if tasks is None:
                     answer(vk, user_id, 'какое-то говно')
                 else:
