@@ -1,9 +1,38 @@
-import vk_api
 from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
-import random
+import vk_api
 
+from os.path import exists
+import random
+import json
 
 from parsing import parse_message
+
+
+def answer(vk, user_id, text):
+    vk.messages.send(user_id=user_id, message=text, random_id=0)
+
+
+def add_task(subj, for_date, to_date, task_text, urls):
+    if exists('test_bd.json'):
+        with open('test_bd.json', 'r') as f:
+            bd = json.loads(f.read())
+    else:
+        bd = {}
+
+    bd.setdefault(subj,[])
+    bd[subj].append((str(for_date), str(to_date), task_text[1:-1], str(urls)))
+
+    with open('test_bd.json', 'w') as f:
+        f.write(json.dumps(bd, indent=4))
+
+def show_task(subj, amount=5):
+    if not exists('test_bd.json'):
+        return
+
+    with open('test_bd.json', 'r') as f:
+        bd = json.loads(f.read())
+
+    return bd[subj][:amount]
 
 
 def main():
@@ -25,27 +54,23 @@ def main():
             text = event.obj.message['text']
             # page = vk.users.get(user_id=116584678)
 
-            if user_id == 116584678 and random.random() > 0.3:
-                vk.messages.send(user_id=user_id, message='Ты пидор', random_id=0)
-
             result = parse_message(text)
             if result is None: # либо пришла не команда, либо еще что-то,
                continue        # что надо игнорировать
 
             if 'error' in result:
-                vk.messages.send(user_id=user_id, message=result['error'], random_id=0)
+                answer(vk, user_id, result['error'])
                 continue
 
             print(result)
             cmd = result['command']
             if cmd == 'добавить':
-                # add_task(subj=result['subj'], 
-                #          for_date='for_date', 
-                #          to_date=result['to_date'], 
-                #          task_text=result['task_text'],
-                #          urls=result['urls'])
-                answer = ' '.join(str(value) for value in result.values())
-                vk.messages.send(user_id=user_id, message=answer, random_id=0)
+                add_task(subj=result['subj'], 
+                         for_date=result['for_date'], 
+                         to_date=result['to_date'], 
+                         task_text=result['task_text'],
+                         urls=result['urls'])
+                answer(vk, user_id, 'Добавлено!')
             elif cmd == 'удалить':
                 # db.delete()
                 pass
@@ -54,7 +79,11 @@ def main():
                 # tasks = db.get(subj_name)
                 # answ = deins_func(tasks)
                 # answer(answ)
-                pass
+                tasks = show_task(result['subj'], result['amount'])
+                if tasks is None:
+                    answer(vk, user_id, 'какое-то говно')
+                else:
+                    answer(vk, user_id, str(tasks))
             
 
 if __name__ == "__main__":

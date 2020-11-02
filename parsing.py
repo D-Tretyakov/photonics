@@ -21,31 +21,28 @@ def parse_message(message):
         return
 
     if message.startswith('!показать'):
-        pattern = r'!показать\s(\w*)\sна\s(\S*)\s(\d*)' # шаблон для команды
-        args = re.search(pattern, message).groups() # возвращаем список из 
-                                                    # аргументов команды
+        pattern = r'!показать\s(\w*)\s(\d*)' # шаблон для команды
+        result = re.search(pattern, message) # возвращаем список из 
+                                             # аргументов команды
 
-        if not args:
+        if not result:
             return {'error': 'invalid command format'}
 
+        args = result.groups()
         subj = args[0] 
-        for_date_str = args[1]
-        amount = args[2]
-
-        for_date = convert_date(for_date_str)
-        if for_date is None: 
-            return {'error': 'invalid date'}
+        amount = args[1]
         
-        return {'command': 'показать', 'subj': subj, 'for_date': for_date, 'amount': amount}
+        return {'command': 'показать', 'subj': subj, 'amount': amount}
 
     elif message.startswith('!добавить'):
         # !добавить subj на from_date до to_date "task_text" [url1 url2 url3] <- структура команды
         pattern = r'!добавить\s(\w*)\sна\s(\S*)\sдо\s(\S*)\s(\"(.*?)\")\s(\[(.*?)\])'
-        args = re.search(pattern, message).groups()
+        result = re.search(pattern, message)
 
-        if not args:
+        if not result:
             return {'error': 'invalid command format'}
-        
+
+        args = result.groups()
         subj = args[0] 
         for_date_str = args[1]
         to_date_str = args[2]
