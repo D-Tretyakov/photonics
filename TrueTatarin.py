@@ -1,10 +1,12 @@
+import re
+
 def parsing(str1 ,id , name):
     dict1 = {}
     if str1[0] != '!':
-        return 2*"иди нахуй , пиши по шаблону  "
+        return  {'error': 'пиши по шаблону'}
     list1 = str1.lower().split()                    # разделю запрос на слова
 
-    import re                           # для чтения ссылок
+                             # для чтения ссылок
 
     if list1[0] == '!добавить':                 # Реализация Python Switch Case с помощью if-elif
 
@@ -15,7 +17,7 @@ def parsing(str1 ,id , name):
                 f = list1.index(i)
                 continue
             else:
-                return 'Сука , пиши по шаблону , как же ты заебал'
+                return  {'error': 'пиши по шаблону'}
 
         if list1.index('за') != 4:                  #  На тот случай , если предмет будет из двух и более  строчек - объединяю  элементыц списка
             list1[3:list1.index('за')] = [' '.join(list1[3 :list1.index('за')])]
@@ -49,7 +51,7 @@ def parsing(str1 ,id , name):
                     f = list1.index(i)
                     continue
                 else:
-                    return 'Сука , пиши по шаблону , как же ты заебал'
+                    return  {'error': 'пиши по шаблону'}
 
             if list1.index('на') != 4:             # На тот случай , если предмет будет из двух и более строчек - объединяю два элемента списка
                 list1[3 : list1.index('на')] = [' '.join(list1[3 : list1.index('на')])]
@@ -65,7 +67,7 @@ def parsing(str1 ,id , name):
                     f = list1.index(i)
                     continue
                 else:
-                    return 'Сука , пиши по шаблону , как же ты заебал'
+                    return  {'error': 'пиши по шаблону'}
 
             dict1['subj'] = ' '.join(list1[3:len(list1)])
             dict1['to_date'] = 'None'
@@ -80,7 +82,7 @@ def parsing(str1 ,id , name):
                 f = list1.index(i)
                 continue
             else:
-                return 'Сука , пиши по шаблону , как же ты заебал'
+                return  {'error': 'пиши по шаблону'}
         dict1['type'] = 'homework'
         dict1['command'] = 'удалить'
 
@@ -90,13 +92,16 @@ def parsing(str1 ,id , name):
         dict1['from_date'] = ' '.join(list1[5:len(list1)])    # Ожидаю шаблон : !Удалить дз по .... за .....(число)
 
     else:
-        return "Пошел нахуй, аналогично "
+        return  {'error': 'пиши по шаблону'}
 
     dict2 = {'id': id, 'name': name}   # Я предположил , что в функцию также могут предоваться значения id, name, если нет , что тут значения по умолчанию
 
     dictfull = { 'parameters': dict1, 'user': dict2}
 
     return dictfull
+
+str1 = str(input())
+print(parsing(str1, '232323', 'авава'))
 
 
 
